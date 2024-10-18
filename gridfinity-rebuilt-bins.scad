@@ -40,6 +40,9 @@ gridy = 2; //.5
 // bin height. See bin height information and "gridz_define" below.
 gridz = 6; //.1
 
+l_gridx = 42;
+l_gridy = 35;
+
 /* [Linear Compartments] */
 // number of X Divisions (set to zero to have solid bin)
 divx = 1;
@@ -103,7 +106,7 @@ hole_options = bundle_hole_options(refined_holes, magnet_holes, screw_holes, cru
 // ===== IMPLEMENTATION ===== //
 
 color("tomato") {
-gridfinityInit(gridx, gridy, height(gridz, gridz_define, style_lip, enable_zsnap), height_internal, sl=style_lip) {
+gridfinityInit(gridx, gridy, height(gridz, gridz_define, style_lip, enable_zsnap), height_internal, sl=style_lip, l=[l_gridx, l_gridy]) {
 
     if (divx > 0 && divy > 0) {
 
@@ -114,7 +117,7 @@ gridfinityInit(gridx, gridy, height(gridz, gridz_define, style_lip, enable_zsnap
         cutCylinders(n_divx=cdivx, n_divy=cdivy, cylinder_diameter=cd, cylinder_height=ch, coutout_depth=c_depth, orientation=c_orientation, chamfer=c_chamfer);
     }
 }
-gridfinityBase([gridx, gridy], hole_options=hole_options, only_corners=only_corners, thumbscrew=enable_thumbscrew);
+gridfinityBase([gridx, gridy], hole_options=hole_options, only_corners=only_corners, thumbscrew=enable_thumbscrew, grid_dimensions=[l_gridx, l_gridy]);
 }
 
 

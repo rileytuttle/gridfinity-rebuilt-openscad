@@ -138,7 +138,7 @@ module cutCylinders(n_divx=1, n_divy=1, cylinder_diameter=1, cylinder_height=1, 
 // initialize gridfinity
 // sl:  lip style of this bin.
 //      0:Regular lip, 1:Remove lip subtractively, 2:Remove lip and retain height
-module gridfinityInit(gx, gy, h, h0 = 0, l = l_grid, sl = 0) {
+module gridfinityInit(gx, gy, h, h0 = 0, l = [l_grid, l_grid], sl = 0) {
     $gxx = gx;
     $gyy = gy;
     $dh = h;
@@ -448,13 +448,13 @@ module profile_wall2(height_mm) {
 
 module block_wall(gx, gy, l) {
     translate([0,0,h_base])
-    sweep_rounded(gx*l-2*r_base-0.5-0.001, gy*l-2*r_base-0.5-0.001)
+    sweep_rounded(gx*l[0]-2*r_base-0.5-0.001, gy*l[1]-2*r_base-0.5-0.001)
     children();
 }
 
 module block_bottom( h = 2.2, gx, gy, l ) {
     translate([0,0,h_base+0.1])
-    rounded_rectangle(gx*l-0.5-d_wall/4, gy*l-0.5-d_wall/4, h, r_base+0.01);
+    rounded_rectangle(gx*l[0]-0.5-d_wall/4, gy*l[1]-0.5-d_wall/4, h, r_base+0.01);
 }
 
 module cut_move_unsafe(x, y, w, h) {
