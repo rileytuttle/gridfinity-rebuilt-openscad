@@ -21,6 +21,9 @@ $fs = 0.25;
 gridx = 1;
 // number of bases along y-axis
 gridy = 1;
+// length of x grid
+l_grid_x = 42;
+l_grid_y = 42;
 
 /* [Screw Together Settings - Defaults work for M3 and 4-40] */
 // screw diameter
@@ -67,7 +70,7 @@ hole_options = bundle_hole_options(refined_hole=false, magnet_hole=enable_magnet
 // ===== IMPLEMENTATION ===== //
 
 color("tomato")
-gridfinityBaseplate([gridx, gridy], l_grid, [distancex, distancey], style_plate, hole_options, style_hole, [fitx, fity]);
+gridfinityBaseplate([gridx, gridy], [l_grid_x, l_grid_y], [distancex, distancey], style_plate, hole_options, style_hole, [fitx, fity]);
 
 // ===== CONSTRUCTION ===== //
 
@@ -105,10 +108,10 @@ module gridfinityBaseplate(grid_size_bases, length, min_size_mm, sp, hole_option
 
     // Final size in number of bases
     grid_size = [for (i = [0:1])
-        grid_size_bases[i] == 0 ? floor(min_size_mm[i]/length) : grid_size_bases[i]];
+        grid_size_bases[i] == 0 ? floor(min_size_mm[i]/length[i]) : grid_size_bases[i]];
 
     // Final size of the base before padding. In mm.
-    grid_size_mm = concat(grid_size * length, [baseplate_height_mm]);
+    grid_size_mm = concat(grid_size[0] * length[0], grid_size[1] * length[1], [baseplate_height_mm]);
 
     // Final size, including padding. In mm.
     size_mm = [
@@ -155,13 +158,13 @@ module gridfinityBaseplate(grid_size_bases, length, min_size_mm, sp, hole_option
     difference() {
         union() {
             // Baseplate itself
-            pattern_linear(grid_size.x, grid_size.y, length) {
+            pattern_linear(grid_size.x, grid_size.y, length[0], length[1]) {
                 // Single Baseplate piece
                 difference() {
                     if (minimal) {
-                        square_baseplate_lip(additional_height);
+                        square_baseplate_lip(additional_height, length);
                     } else {
-                        solid_square_baseplate(additional_height);
+                        solid_square_baseplate(additional_height, length);
                     }
 
                     // Bottom/through pattern for the solid baseplates.
@@ -221,7 +224,7 @@ module gridfinityBaseplate(grid_size_bases, length, min_size_mm, sp, hole_option
 
         if (screw_together) {
             translate([0, 0, additional_height/2])
-            cutter_screw_together(grid_size.x, grid_size.y, length);
+            cutter_screw_together(grid_size.x, grid_size.y, length[0], length[1]);
         }
     }
 }
@@ -335,17 +338,26 @@ module baseplate_lip(height=0, width=l_grid, length=l_grid) {
  * @param height Baseplate's height excluding lip and clearance height.
  * @param size Width/Length of a single baseplate.  Only set if deviating from the standard!
  */
-module square_baseplate_lip(height=0, size = l_grid) {
-    assert(height >= 0 && size/2 >= BASEPLATE_OUTSIDE_RADIUS);
+module square_baseplate_lip(height=0, size = [l_grid,l_grid]) {
+    assert(height >= 0 && size[0]/2 >= BASEPLATE_OUTSIDE_RADIUS);
 
-    corner_center_distance = size/2 - BASEPLATE_OUTSIDE_RADIUS;
+    corner_center_distance_x = size[0]/2 - BASEPLATE_OUTSIDE_RADIUS;
+    corner_center_distance_y = size[1]/2 - BASEPLATE_OUTSIDE_RADIUS;
 
     render(convexity = 2) // Fixes ghosting in preview
     union() {
-        baseplate_lip(height, size, size);
-        pattern_circular(4)
-        translate([corner_center_distance, corner_center_distance, 0])
-        square_baseplate_corner(height);
+        baseplate_lip(height, size[0], size[1]);
+        for (loc=[
+             [1, 1, 0],
+             [1, -1, -90],
+             [-1, 1, 90],
+             [-1, -1, 180]
+             ]) {
+            translate([loc[0] * corner_center_distance_x, loc[1] * corner_center_distance_y, 0])
+            rotate([0, 0, loc[2]])
+            square_baseplate_corner(height);
+        }
+        
     }
 }
 
@@ -355,7 +367,7 @@ module square_baseplate_lip(height=0, size = l_grid) {
  * @param size Width/Length of a single baseplate.  Only set if deviating from the standard!
  * @details A height of zero is the equivalent of just calling square_baseplate_lip()
  */
-module solid_square_baseplate(height=0, size = l_grid) {
+module solid_square_baseplate(height=0, size = [l_grid, l_grid]) {
     assert(height >= 0 && size > 0);
 
     union() {
@@ -389,7 +401,7 @@ module profile_skeleton(size=l_grid) {
     }
 }
 
-module cutter_screw_together(gx, gy, size = l_grid) {
+module cutter_screw_together(gx, gy, size = [l_grid, l_grid]) {
 
     screw(gx, gy);
     rotate([0,0,90])
@@ -397,10 +409,10 @@ module cutter_screw_together(gx, gy, size = l_grid) {
 
     module screw(a, b) {
         copy_mirror([1,0,0])
-        translate([a*size/2, 0, 0])
-        pattern_linear(1, b, 1, size)
+        translate([a*size[0]/2, 0, 0])
+        pattern_linear(1, b, 1, size[1])
         pattern_linear(1, n_screws, 1, d_screw_head + screw_spacing)
         rotate([0,90,0])
-        cylinder(h=size/2, d=d_screw, center = true);
+        cylinder(h=size[0]/2, d=d_screw, center = true);
     }
 }
