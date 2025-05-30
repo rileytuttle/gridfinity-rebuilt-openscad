@@ -368,7 +368,7 @@ module square_baseplate_lip(height=0, size = [l_grid,l_grid]) {
  * @details A height of zero is the equivalent of just calling square_baseplate_lip()
  */
 module solid_square_baseplate(height=0, size = [l_grid, l_grid]) {
-    assert(height >= 0 && size > 0);
+    assert(height >= 0 && size[0] > 0 && size[1] > 0);
 
     union() {
         square_baseplate_lip(height, size);
